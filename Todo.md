@@ -1,8 +1,8 @@
-[] git repo
+[x] git repo
+[x] Reload on button clickable
+[x] Add loaders
 [] Network Cache
 [] Add search + list + detail
-[] Reload on button clickable
 [] UI
-[] Add loaders
 [] Adapting
 [] make it responsive
