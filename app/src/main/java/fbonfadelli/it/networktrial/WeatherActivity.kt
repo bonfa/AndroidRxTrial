@@ -68,10 +68,6 @@ class WeatherActivity : AppCompatActivity() {
     }
 
     private fun showResult(list: List<Weather>) {
-        if (list.isEmpty()) {
-            details.text = "error"
-        } else {
-            details.text = list.first().toString()
-        }
+        list.firstOrNull()?.let { details.text = it.toString() }
     }
 }
