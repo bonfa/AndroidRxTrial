@@ -23,6 +23,7 @@ class WeatherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
+
         rxWeatherService = RxWeatherService()
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)

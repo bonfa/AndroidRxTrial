@@ -22,7 +22,7 @@
         android:id="@+id/progress"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="@id/title"
         app:layout_constraintLeft_toRightOf="@id/title"
         app:layout_constraintTop_toTopOf="@id/title" />
