@@ -16,6 +16,7 @@ class WeatherActivity : AppCompatActivity() {
 
     private lateinit var details: TextView
     private lateinit var reloadButton: MaterialButton
+    private lateinit var resetViewButton: MaterialButton
     private lateinit var progress: ProgressBar
     private lateinit var subscription: Disposable
     private lateinit var weatherRepository: WeatherRepository
@@ -24,11 +25,13 @@ class WeatherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
 
-        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make())
+        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make(), WeatherCache())
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
+        resetViewButton = findViewById(R.id.resetViewButton)
         progress = findViewById(R.id.progress)
         reloadButton.setOnClickListener { loadWeatherData() }
+        resetViewButton.setOnClickListener { details.text = "" }
     }
 
     override fun onStart() {
