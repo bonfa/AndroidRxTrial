@@ -24,7 +24,7 @@ class WeatherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
 
-        rxWeatherService = RxWeatherService()
+        rxWeatherService = RxWeatherService(RxWeatherServiceFactory.make())
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
         progress = findViewById(R.id.progress)

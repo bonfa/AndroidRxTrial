@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 private const val BASE_URL = "https://www.metaweather.com/"
 
-class WeatherServiceFactory {
+class RxWeatherServiceFactory {
     companion object {
         fun make(): WeatherApi {
             val retrofit = Retrofit.Builder()
