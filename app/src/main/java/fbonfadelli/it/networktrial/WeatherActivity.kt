@@ -25,7 +25,7 @@ class WeatherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
 
-        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make(), InMemoryWeatherCache())
+        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make(), WeatherAndroidCache(this))
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
         resetViewButton = findViewById(R.id.resetViewButton)
@@ -43,11 +43,12 @@ class WeatherActivity : AppCompatActivity() {
         subscription = weatherRepository
             .getWeatherFor("44418")
             .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread(), true) // the delay error is mandatory otherwise when there is NO NETWORK, the retrofit exception blocks also the db
             .doOnSubscribe { showLoader() }
             .doOnComplete { hideLoader() }
             .doOnError { hideLoader(); showError(it) }
             .onErrorReturn { WeatherResponse(emptyList()) }
+            .doOnNext { showResult(it.consolidated_weather) }
             .subscribe { showResult(it.consolidated_weather) }
     }
 

@@ -10,12 +10,14 @@ class WeatherRepository(
 
     fun getWeatherFor(locationId: String): Observable<WeatherResponse> {
         return weatherCache.load(locationId)
-            .mergeWith(weatherService.get(locationId))
-            .doOnNext {
-                if (it.consolidated_weather.isNotEmpty()) {
-                    this.weatherCache.store(it, locationId)
+            .concatWith(weatherService.get(locationId)
+                .doOnNext {
+                    if (it.consolidated_weather.isNotEmpty()) {
+                        this.weatherCache.store(it, locationId)
+                    }
                 }
-            }
+            )
+
     }
 }
 

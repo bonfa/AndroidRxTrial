@@ -1,5 +1,7 @@
 package fbonfadelli.it.networktrial
 
+import java.io.Serializable
+
 data class Weather(
     val id: Long,
     val weather_state_name: String,
@@ -14,4 +16,4 @@ data class Weather(
     val humidity: Float,
     val visibility: Float,
     val predictability: Int
-)
+): Serializable
