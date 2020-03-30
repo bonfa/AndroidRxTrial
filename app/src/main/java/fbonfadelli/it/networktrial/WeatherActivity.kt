@@ -25,7 +25,7 @@ class WeatherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
 
-        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make(), WeatherCache())
+        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make(), InMemoryWeatherCache())
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
         resetViewButton = findViewById(R.id.resetViewButton)
