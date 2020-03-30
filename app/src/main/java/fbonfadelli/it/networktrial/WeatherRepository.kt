@@ -3,9 +3,9 @@ package fbonfadelli.it.networktrial
 import io.reactivex.Observable
 
 
-class RxWeatherService(private val weatherApi: WeatherApi) {
+class WeatherRepository(private val weatherService: WeatherService) {
     fun getWeatherFor(locationId: String): Observable<WeatherResponse> {
-        return weatherApi.get(locationId)
+        return weatherService.get(locationId)
     }
 }
 

@@ -11,7 +11,7 @@ private const val BASE_URL = "https://www.metaweather.com/"
 
 class RxWeatherServiceFactory {
     companion object {
-        fun make(): WeatherApi {
+        fun make(): WeatherService {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -19,7 +19,7 @@ class RxWeatherServiceFactory {
                 .client(createHttpClient())
                 .build()
 
-            return retrofit.create(WeatherApi::class.java)
+            return retrofit.create(WeatherService::class.java)
         }
 
         private fun createHttpClient(): OkHttpClient {

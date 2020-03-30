@@ -18,13 +18,13 @@ class WeatherActivity : AppCompatActivity() {
     private lateinit var reloadButton: MaterialButton
     private lateinit var progress: ProgressBar
     private lateinit var subscription: Disposable
-    private lateinit var rxWeatherService: RxWeatherService
+    private lateinit var weatherRepository: WeatherRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
 
-        rxWeatherService = RxWeatherService(RxWeatherServiceFactory.make())
+        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make())
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
         progress = findViewById(R.id.progress)
@@ -37,7 +37,7 @@ class WeatherActivity : AppCompatActivity() {
     }
 
     private fun loadWeatherData() {
-        subscription = rxWeatherService
+        subscription = weatherRepository
             .getWeatherFor("44418")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
