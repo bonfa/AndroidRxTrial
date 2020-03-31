@@ -20,7 +20,6 @@ class WeatherActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private lateinit var subscription: Disposable
     private lateinit var weatherRepository: WeatherRepository
-    private lateinit var weatherViewModelProvider: WeatherViewModelProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +27,6 @@ class WeatherActivity : AppCompatActivity() {
 
         weatherRepository =
             WeatherRepository(RxWeatherServiceFactory.make(), WeatherAndroidCache(this))
-        weatherViewModelProvider = WeatherViewModelProvider(weatherRepository)
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
         resetViewButton = findViewById(R.id.resetViewButton)
@@ -50,39 +48,32 @@ class WeatherActivity : AppCompatActivity() {
     }
 
     private fun loadWeatherData() {
-        subscription = weatherViewModelProvider
+        subscription = weatherRepository
             .getWeatherFor("44418")
             .subscribeOn(Schedulers.io())
-            .observeOn(
-                AndroidSchedulers.mainThread(),
-                true
-            ) // the delay error is mandatory otherwise when there is NO NETWORK, the retrofit exception blocks also the db
-            .doOnNext { maybeUpdateView(it) }
-            .subscribe { maybeUpdateView(it) }
+            .observeOn(AndroidSchedulers.mainThread(), true) // the delay error is mandatory otherwise when there is NO NETWORK, the retrofit exception blocks also the db
+            .doOnSubscribe { showLoader() }
+            .doOnComplete { hideLoader() }
+            .doOnError { hideLoader(); showError(it) }
+            .onErrorReturn { WeatherResponse(emptyList()) }
+            .doOnNext { showResult(it.consolidated_weather) }
+            .subscribe { showResult(it.consolidated_weather) }
     }
 
-    private fun maybeUpdateView(viewModel: WeatherViewModel?) {
-        viewModel?.let {
-            updateView(it)
-        }
-
-        if (viewModel == null) {
-            Log.w("WeatherActivity", "View model is null")
-        }
+    private fun showLoader() {
+        progress.visibility = View.VISIBLE
     }
 
-    private fun updateView(weatherViewModel: WeatherViewModel) {
-        Log.w("Weather activity", "viewmodel=$weatherViewModel")
-        progress.visibility = if (weatherViewModel.loader.visible) View.VISIBLE else View.GONE
+    private fun hideLoader() {
+        progress.visibility = View.GONE
+    }
 
-        if (weatherViewModel.errorMessage.visible) {
-            Toast.makeText(this, weatherViewModel.errorMessage.messageForUser, Toast.LENGTH_SHORT)
-                .show()
-            Log.e("WeatherActivity", weatherViewModel.errorMessage.messageForLogger)
-        }
+    private fun showError(error: Throwable) {
+        error.message?.let { Log.e("WeatherActivity", it) }
+        Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
+    }
 
-        if (weatherViewModel.weather.visible) {
-            details.text = weatherViewModel.weather.content
-        }
+    private fun showResult(list: List<Weather>) {
+        list.firstOrNull()?.let { details.text = it.toString() }
     }
 }

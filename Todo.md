@@ -5,6 +5,4 @@
 [x] In memory cache
 [x] Storage cache
 [] View model
-[] Add search + list + detail
-[] UI
-[] Adapting
+[] readme
