@@ -1,52 +1,67 @@
 package fbonfadelli.it.networktrial
 
 import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
+
+
+data class WeatherViewModelProviderState(
+    internal val viewModel: WeatherViewModel
+)
 
 class WeatherViewModelProvider(private val weatherRepository: WeatherRepository) {
-    private var viewModel = WeatherViewModel(
-        ViewLoader.hidden(),
-        ViewErrorMessage.hidden(),
-        ViewWeather.hidden()
+    private var state: WeatherViewModelProviderState = WeatherViewModelProviderState(
+        WeatherViewModel(
+            ViewLoader.hidden(),
+            ViewErrorMessage.hidden(),
+            ViewWeather.hidden()
+        )
     )
-
 
     fun getWeatherFor(locationId: String): Observable<WeatherViewModel> {
         return Observable.create { emitter ->
             weatherRepository
                 .getWeatherFor(locationId)
                 .doOnSubscribe {
-                    this.viewModel = this.viewModel.copy(loader = ViewLoader.visible())
-                    emitter.onNext(this.viewModel)
+                    setState(state.viewModel.copy(loader = ViewLoader.visible()))
+                    emitTheViewModelInStateTo(emitter)
                 }
                 .doOnComplete {
-                    this.viewModel = this.viewModel.copy(loader = ViewLoader.hidden())
-                    emitter.onNext(this.viewModel)
+                    setState(state.viewModel.copy(loader = ViewLoader.hidden()))
+                    emitTheViewModelInStateTo(emitter)
                     emitter.onComplete()
                 }
                 .doOnError {
-                    this.viewModel = this.viewModel.copy(
-                        errorMessage = ViewErrorMessage.visibleWith(
-                            "An error occurred",
-                            errorMessageFrom(it)
-                        )
-                    ).copy(loader = ViewLoader.hidden())
-                    emitter.onNext(this.viewModel)
+                    setState(
+                        state.viewModel.copy(
+                            errorMessage = ViewErrorMessage.visibleWith(
+                                "An error occurred",
+                                errorMessageFrom(it)
+                            )
+                        ).copy(loader = ViewLoader.hidden())
+                    )
+                    emitTheViewModelInStateTo(emitter)
                     emitter.onComplete()
                 }
                 .onErrorReturn {
                     WeatherResponse(emptyList())
                 }
                 .doOnNext {
-                    this.viewModel =
-                        this.viewModel.copy(weather = ViewWeather.visibleWith(content(it)))
-                    emitter.onNext(this.viewModel)
+                    setState(state.viewModel.copy(weather = ViewWeather.visibleWith(content(it))))
+                    emitTheViewModelInStateTo(emitter)
                 }
                 .subscribe {
-                    this.viewModel =
-                        this.viewModel.copy(weather = ViewWeather.visibleWith(content(it)))
-                    emitter.onNext(this.viewModel)
+                    setState(state.viewModel.copy(weather = ViewWeather.visibleWith(content(it))))
+                    emitTheViewModelInStateTo(emitter)
                 }
         }
+    }
+
+    private fun emitTheViewModelInStateTo(emitter: ObservableEmitter<WeatherViewModel>) {
+        emitter.onNext(this.state.viewModel)
+    }
+
+    private fun setState(viewModel: WeatherViewModel) {
+        this.state = WeatherViewModelProviderState(viewModel)
     }
 
     private fun content(it: WeatherResponse) =
