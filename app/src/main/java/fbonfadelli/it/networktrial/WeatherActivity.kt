@@ -20,12 +20,15 @@ class WeatherActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private lateinit var subscription: Disposable
     private lateinit var weatherRepository: WeatherRepository
+    private lateinit var weatherViewModelProvider: WeatherViewModelProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
 
-        weatherRepository = WeatherRepository(RxWeatherServiceFactory.make(), WeatherAndroidCache(this))
+        weatherRepository =
+            WeatherRepository(RxWeatherServiceFactory.make(), WeatherAndroidCache(this))
+        weatherViewModelProvider = WeatherViewModelProvider(weatherRepository)
         details = findViewById(R.id.detail)
         reloadButton = findViewById(R.id.reloadButton)
         resetViewButton = findViewById(R.id.resetViewButton)
@@ -39,19 +42,6 @@ class WeatherActivity : AppCompatActivity() {
         loadWeatherData()
     }
 
-    private fun loadWeatherData() {
-        subscription = weatherRepository
-            .getWeatherFor("44418")
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread(), true) // the delay error is mandatory otherwise when there is NO NETWORK, the retrofit exception blocks also the db
-            .doOnSubscribe { showLoader() }
-            .doOnComplete { hideLoader() }
-            .doOnError { hideLoader(); showError(it) }
-            .onErrorReturn { WeatherResponse(emptyList()) }
-            .doOnNext { showResult(it.consolidated_weather) }
-            .subscribe { showResult(it.consolidated_weather) }
-    }
-
     override fun onStop() {
         super.onStop()
         if (!subscription.isDisposed) {
@@ -59,20 +49,40 @@ class WeatherActivity : AppCompatActivity() {
         }
     }
 
-    private fun showLoader() {
-        progress.visibility = View.VISIBLE
+    private fun loadWeatherData() {
+        subscription = weatherViewModelProvider
+            .getWeatherFor("44418")
+            .subscribeOn(Schedulers.io())
+            .observeOn(
+                AndroidSchedulers.mainThread(),
+                true
+            ) // the delay error is mandatory otherwise when there is NO NETWORK, the retrofit exception blocks also the db
+            .doOnNext { maybeUpdateView(it) }
+            .subscribe { maybeUpdateView(it) }
     }
 
-    private fun hideLoader() {
-        progress.visibility = View.GONE
+    private fun maybeUpdateView(viewModel: WeatherViewModel?) {
+        viewModel?.let {
+            updateView(it)
+        }
+
+        if (viewModel == null) {
+            Log.w("WeatherActivity", "View model is null")
+        }
     }
 
-    private fun showError(error: Throwable) {
-        error.message?.let { Log.e("WeatherActivity", it) }
-        Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
-    }
+    private fun updateView(weatherViewModel: WeatherViewModel) {
+        Log.w("Weather activity", "viewmodel=$weatherViewModel")
+        progress.visibility = if (weatherViewModel.loader.visible) View.VISIBLE else View.GONE
 
-    private fun showResult(list: List<Weather>) {
-        list.firstOrNull()?.let { details.text = it.toString() }
+        if (weatherViewModel.errorMessage.visible) {
+            Toast.makeText(this, weatherViewModel.errorMessage.messageForUser, Toast.LENGTH_SHORT)
+                .show()
+            Log.e("WeatherActivity", weatherViewModel.errorMessage.messageForLogger)
+        }
+
+        if (weatherViewModel.weather.visible) {
+            details.text = weatherViewModel.weather.content
+        }
     }
 }
