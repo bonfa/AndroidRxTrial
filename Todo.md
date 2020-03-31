@@ -4,5 +4,5 @@
 [x] Network Cache
 [x] In memory cache
 [x] Storage cache
-[] View model
+[x] View model
 [] readme
