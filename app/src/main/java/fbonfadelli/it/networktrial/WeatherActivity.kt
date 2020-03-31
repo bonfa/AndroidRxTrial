@@ -48,16 +48,15 @@ class WeatherActivity : AppCompatActivity() {
     }
 
     private fun loadWeatherData() {
-        subscription = weatherRepository
+        subscription = WeatherViewModel(weatherRepository)
             .getWeatherFor("44418")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread(), true) // the delay error is mandatory otherwise when there is NO NETWORK, the retrofit exception blocks also the db
             .doOnSubscribe { showLoader() }
             .doOnComplete { hideLoader() }
             .doOnError { hideLoader(); showError(it) }
-            .onErrorReturn { WeatherResponse(emptyList()) }
-            .doOnNext { showResult(it.consolidated_weather) }
-            .subscribe { showResult(it.consolidated_weather) }
+            .doOnNext { showResult(it) }
+            .subscribe { showResult(it) }
     }
 
     private fun showLoader() {
@@ -73,7 +72,18 @@ class WeatherActivity : AppCompatActivity() {
         Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
     }
 
-    private fun showResult(list: List<Weather>) {
-        list.firstOrNull()?.let { details.text = it.toString() }
+    private fun showResult(viewModel: ViewWeather) {
+        if (viewModel.emptyMessage.visible) {
+            details.text = viewModel.emptyMessage.content.message
+        }
+
+        if (viewModel.errorMessage.visible) {
+            details.text = viewModel.errorMessage.content.message
+        }
+
+        if (viewModel.weatherDetail.visible) {
+            val viewWeatherDetailContent = viewModel.weatherDetail.content!!
+            details.text = "Max temperature: ${viewWeatherDetailContent.maxTemperature}"
+        }
     }
 }
